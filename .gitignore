@@ -171,3 +171,4 @@ buildNumber.properties
 # End of https://www.toptal.com/developers/gitignore/api/java,c++,intellij+all,maven
 
 .env
+infrastructure/grafana_data/
