@@ -1,0 +1,46 @@
+services:
+    backend:
+        build: "../backend/"
+        ports:
+        - "8080:8080"
+        depends_on:
+            postgres:
+                condition: service_healthy
+            mosquitto:
+                condition: service_started
+    mosquitto:
+        image: eclipse-mosquitto:alpine
+        ports:
+        - "1883:1883"
+        volumes:
+        -   ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+        # healthcheck:
+        #     test: ["CMD", "nc", "-z", "localhost", "1883"]
+        #     interval: 10s
+        #     timeout: 5s
+        #     retries: 5
+    postgres:
+        image: timescale/timescaledb:latest-pg16
+        ports:
+        - "5432:5432"
+        env_file:
+            - path: ../.env
+              required: true
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_NAME}
+        volumes:
+        -   ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+            interval: 30s
+            retries: 5
+            start_period: 30s
+            timeout: 10s
+    grafana:
+        image: grafana/grafana
+        ports:
+        - "3000:3000"
+        volumes:
+        - ./grafana_data:/var/lib/grafana
