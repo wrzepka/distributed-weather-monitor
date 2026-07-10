@@ -8,6 +8,13 @@ services:
                 condition: service_healthy
             mosquitto:
                 condition: service_started
+        env_file:
+            - path: ../.env
+              required: true
+        environment:
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+            DB_NAME: ${DB_NAME}        
     mosquitto:
         image: eclipse-mosquitto:alpine
         ports:

@@ -35,7 +35,7 @@ public class MqttConfig {
         MqttConnectionOptions options = new MqttConnectionOptions();
         options.setAutomaticReconnect(true);
         options.setCleanStart(true);
-        options.setServerURIs(new String[]{"tcp://localhost:1883"});
+        options.setServerURIs(new String[]{"tcp://mosquitto:1883"});
 
         return new Mqttv5ClientManager(options, "spring-weather-consumer");
     }
