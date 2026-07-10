@@ -1,5 +1,6 @@
 package wrzepka.backend;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
@@ -12,10 +13,12 @@ public class WeatherTelemetry {
 
     @Id
     @Column(name = "date_time", nullable = false)
+    @JsonProperty("date_time")
     private OffsetDateTime dateTime;
 
     @Id
     @Column(name = "device_id", nullable = false)
+    @JsonProperty("device_id")
     private String deviceId;
 
     @Column(name = "pressure", nullable = false)
@@ -28,6 +31,7 @@ public class WeatherTelemetry {
     private float humidity;
 
     @Column(name = "light_intensity", nullable = false)
+    @JsonProperty("light_intensity")
     private int lightIntensity;
 
     public WeatherTelemetry() {
