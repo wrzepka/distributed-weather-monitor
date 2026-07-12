@@ -2,9 +2,9 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "adhc97q",
-    "generation": 87,
-    "creationTimestamp": "2026-07-10T11:47:56Z",
+    "name": "adhc97qdsadsa",
+    "generation": 24,
+    "creationTimestamp": "2026-07-12T16:48:17Z",
     "labels": {},
     "annotations": {}
   },
@@ -17,10 +17,7 @@
             "kind": "DataQuery",
             "group": "grafana",
             "version": "v0",
-            "spec": {},
-            "labels": {
-              "grafana.app/export-label": "grafana-1"
-            }
+            "spec": {}
           },
           "enable": true,
           "hide": true,
@@ -56,7 +53,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(temperature)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id IN ($chosen_devices)\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(temperature)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -91,10 +88,6 @@
                           "limit": 50
                         },
                         "table": "weather_telemetry"
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -233,7 +226,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -251,10 +244,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -350,7 +339,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(pressure)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id IN ($chosen_devices)\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(pressure)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -385,10 +374,6 @@
                           "limit": 50
                         },
                         "table": "weather_telemetry"
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -527,7 +512,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(humidity)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id IN ($chosen_devices)\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(humidity)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -562,10 +547,6 @@
                           "limit": 50
                         },
                         "table": "weather_telemetry"
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -704,7 +685,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(light_intensity)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id IN ($chosen_devices)\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  -- Create 10 minutes periods\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  \r\n  device_id AS metric,\r\n  \r\n  -- Fill gaps with previous average values\r\n  locf(avg(light_intensity)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -739,10 +720,6 @@
                           "limit": 50
                         },
                         "table": "weather_telemetry"
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -881,7 +858,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\n\r\nFROM weather_telemetry \r\n\r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\n\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -899,10 +876,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -998,7 +971,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(pressure)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(pressure)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -1016,10 +989,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -1115,7 +1084,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(humidity)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(humidity)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -1133,10 +1102,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -1220,7 +1185,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(light_intensity)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n      AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(light_intensity)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -1238,10 +1203,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -1337,7 +1298,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n    AND device_id = '$chosen_devices'\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
+                        "rawSql": "SELECT\r\n  time_bucket_gapfill('10m', date_time) AS \"time\",\r\n  device_id AS metric,\r\n  locf(avg(temperature)) AS \"value\"\r\nFROM weather_telemetry \r\nWHERE\r\n  $__timeFilter(date_time)\r\n  AND device_id::text = ANY(string_to_array('${chosen_devices:csv}', ','))\r\nGROUP BY \"time\", metric\r\nORDER BY \"time\";",
                         "sql": {
                           "columns": [
                             {
@@ -1355,10 +1316,6 @@
                           ],
                           "limit": 50
                         }
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "grafana-postgresql-datasource-1",
-                        "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
                       }
                     },
                     "refId": "A",
@@ -1628,7 +1585,7 @@
       "timezone": "browser",
       "from": "now/d",
       "to": "now",
-      "autoRefresh": "",
+      "autoRefresh": "10s",
       "autoRefreshIntervals": [
         "5s",
         "10s",
@@ -1655,7 +1612,7 @@
             "value": ""
           },
           "hide": "dontHide",
-          "refresh": "onDashboardLoad",
+          "refresh": "onTimeRangeChanged",
           "skipUrlSync": false,
           "query": {
             "kind": "DataQuery",
@@ -1699,10 +1656,6 @@
                 }
               },
               "table": "weather_telemetry"
-            },
-            "labels": {
-              "grafana.app/export-label": "grafana-postgresql-datasource-1",
-              "grafana.app/export-datasource-name": "grafana-postgresql-datasource"
             }
           },
           "regex": "",
@@ -1712,7 +1665,7 @@
           "options": [],
           "multi": true,
           "includeAll": true,
-          "allowCustomValue": true
+          "allowCustomValue": false
         }
       }
     ],
