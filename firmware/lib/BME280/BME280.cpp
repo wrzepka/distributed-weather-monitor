@@ -27,7 +27,6 @@ const BME280::bme280_calib_data &BME280::calib_data() const {
     return _calib_data;
 }
 
-
 bool BME280::read_calib_data() {
     uint8_t data[26] = {0};
     uint8_t reg_address = 0x88;

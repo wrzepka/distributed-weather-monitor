@@ -9,6 +9,7 @@
 #include "esp_log.h"
 #include "driver/i2c_master.h"
 #include "../lib/BH1750/BH1750.h"
+#include "../lib/BME280/BME280.h"
 
 #define BLINK_GPIO GPIO_NUM_15
 
@@ -25,18 +26,26 @@ extern "C" void app_main(void) {
     i2c_master_get_bus_handle(I2C_NUM_0, &i2c_bus_handle);
 
     BH1750 *light_intensity_sensor = new BH1750();
+    BME280 *temperature_sensor = new BME280();
 
     uint8_t led_state = 0;
+
+    light_intensity_sensor->begin(i2c_bus_handle);
+    temperature_sensor->begin(i2c_bus_handle);
+
+    const BME280::bme280_calib_data &calib = temperature_sensor->calib_data();
 
     while (true) {
         led_state = !led_state;
         gpio_set_level(BLINK_GPIO, led_state);
 
-        light_intensity_sensor->begin(i2c_bus_handle);
         uint32_t result = light_intensity_sensor->read_light_intensity();
 
         ESP_LOGI(TAG, "LED: %s", (led_state == 1 ? "ON" : "OFF"));
         ESP_LOGI(TAG, "ILLUMINANCE: %u", result);
+        ESP_LOGI(TAG, "T1 CALIB DATA: %u", calib.dig_T1);
+        ESP_LOGI(TAG, "T1 CALIB DATA: %d", calib.dig_T2);
+        ESP_LOGI(TAG, "T1 CALIB DATA: %d", calib.dig_T3);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
