@@ -14,6 +14,7 @@
 #define BLINK_GPIO GPIO_NUM_15
 
 void init_i2c();
+void i2c_scanner(i2c_master_bus_handle_t bus_handle);
 
 static const char *TAG = "FireBeetle 2 ESP32-C6 Weather Station";
 
@@ -36,6 +37,8 @@ extern "C" void app_main(void) {
     const BME280::bme280_calib_data &calib = temperature_sensor->calib_data();
 
     while (true) {
+        i2c_scanner(i2c_bus_handle);
+
         led_state = !led_state;
         gpio_set_level(BLINK_GPIO, led_state);
 
@@ -66,4 +69,13 @@ void init_i2c() {
     };
 
     ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &bus_handle));
+}
+
+void i2c_scanner(i2c_master_bus_handle_t bus_handle) {
+    for (uint8_t address = 0x08; address < 0x78; address++) {
+        esp_err_t check_result = i2c_master_probe(bus_handle, address, -1);
+        if (check_result == ESP_OK) {
+            ESP_LOGI(TAG, "Found device at 0x%02X", address);
+        }
+    }
 }
