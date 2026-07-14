@@ -94,3 +94,14 @@ void BME280::print_calib_data() const {
     ESP_LOGI(TAG, "H6 CALIB DATA: %d", this->_calib_data.dig_H6);
 }
 
+int32_t BME280::compensate_temperature(int32_t adc_temp) {
+    int32_t var1, var2, temp;
+    var1 = (((adc_temp >> 3) - (this->_calib_data.dig_T1 << 1)) * this->_calib_data.dig_T2) >> 11;
+    var2 = ((((adc_temp >> 4) - (this->_calib_data.dig_T1)) * ((adc_temp >> 4) - this->_calib_data.dig_T1)) >> 12) * this->_calib_data.dig_T3 >> 14;
+
+    this->fine_temp = var1 + var2;
+    temp = (this->fine_temp * 5 + 128) >> 8;
+    return temp;
+}
+
+
