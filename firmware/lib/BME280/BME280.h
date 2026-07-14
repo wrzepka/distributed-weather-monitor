@@ -34,6 +34,24 @@ public:
         int32_t t_fine; /**<calibration T_FINE data*/
     };
 
+    //TODO: find alternative (hex i guess)
+    union bme_280_ctrl_meas {
+        struct {
+            uint8_t mode : 2;
+            uint8_t osrs_p : 3;
+            uint8_t osrs_t : 3;
+        } fields;
+        uint8_t raw;
+    };
+
+    union bme_280_hum_meas {
+        struct {
+            uint8_t osrs_h : 3;
+            uint8_t RESERVED : 5;
+        } fields;
+        uint8_t raw;
+    };
+
     BME280(uint8_t address = 0x76) : _address(address), _dev_handle(nullptr), _calib_data() {
     };
 

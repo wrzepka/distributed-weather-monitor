@@ -7,6 +7,8 @@
 #include <esp_log.h>
 #include <driver/gpio.h>
 #include <driver/i2c_master.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 bool BME280::begin(i2c_master_bus_handle_t bus_handle) {
     const i2c_device_config_t dev_config = {
@@ -18,6 +20,24 @@ bool BME280::begin(i2c_master_bus_handle_t bus_handle) {
     };
 
     if (i2c_master_bus_add_device(bus_handle, &dev_config, &this->_dev_handle) == ESP_OK) {
+        bme_280_hum_meas hum_meas = {
+            .fields = {.osrs_h = 1, .RESERVED = 0}
+        };
+
+        bme_280_ctrl_meas ctrl_meas = {
+            .fields = {
+                .mode = 0,
+                .osrs_p = 1,
+                .osrs_t = 1,
+            }
+        };
+
+        uint8_t transmit_data[2] = {0xF2, hum_meas.raw};
+        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
+        transmit_data[0] = 0xF4;
+        transmit_data[1] = ctrl_meas.raw;
+        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
+
         return true;
     }
     return false;
@@ -133,6 +153,11 @@ uint32_t BME280::compensate_pressure(int32_t adc_p) {
 }
 
 bool BME280::read_weather_data() {
+    uint8_t transmit_data[2] = {0xF4, 0x25};
+    i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
     uint8_t reg_address = 0xF7;
     uint8_t data[8] = {0};
 
@@ -147,6 +172,7 @@ bool BME280::read_weather_data() {
     adc_T = (data[3] << 12) | (data[4] << 4) | ((data[5] >> 4));
     int32_t T = compensate_temperature(adc_T);
 
+    // THIS IS ABSOLUTE PRESSURE
     adc_P = (data[0] << 12) | (data[1] << 4) | ((data[2] >> 4));
     uint32_t P = compensate_pressure(adc_P);
 
