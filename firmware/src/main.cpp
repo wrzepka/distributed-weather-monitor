@@ -34,6 +34,8 @@ extern "C" void app_main(void) {
     light_intensity_sensor->begin(i2c_bus_handle);
     temperature_sensor->begin(i2c_bus_handle);
 
+    temperature_sensor->read_calib_data();
+
     const BME280::bme280_calib_data &calib = temperature_sensor->calib_data();
 
     while (true) {
@@ -47,8 +49,18 @@ extern "C" void app_main(void) {
         ESP_LOGI(TAG, "LED: %s", (led_state == 1 ? "ON" : "OFF"));
         ESP_LOGI(TAG, "ILLUMINANCE: %u", result);
         ESP_LOGI(TAG, "T1 CALIB DATA: %u", calib.dig_T1);
-        ESP_LOGI(TAG, "T1 CALIB DATA: %d", calib.dig_T2);
-        ESP_LOGI(TAG, "T1 CALIB DATA: %d", calib.dig_T3);
+        ESP_LOGI(TAG, "T2 CALIB DATA: %d", calib.dig_T2);
+        ESP_LOGI(TAG, "T3 CALIB DATA: %d", calib.dig_T3);
+        ESP_LOGI(TAG, "P1 CALIB DATA: %d", calib.dig_P1);
+        ESP_LOGI(TAG, "P2 CALIB DATA: %d", calib.dig_P2);
+        ESP_LOGI(TAG, "P3 CALIB DATA: %d", calib.dig_P3);
+        ESP_LOGI(TAG, "P4 CALIB DATA: %d", calib.dig_P4);
+        ESP_LOGI(TAG, "P5 CALIB DATA: %d", calib.dig_P5);
+        ESP_LOGI(TAG, "P6 CALIB DATA: %d", calib.dig_P6);
+        ESP_LOGI(TAG, "P7 CALIB DATA: %d", calib.dig_P7);
+        ESP_LOGI(TAG, "P8 CALIB DATA: %d", calib.dig_P8);
+        ESP_LOGI(TAG, "P9 CALIB DATA: %d", calib.dig_P9);
+        ESP_LOGI(TAG, "H1 CALIB DATA: %d", calib.dig_H1);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

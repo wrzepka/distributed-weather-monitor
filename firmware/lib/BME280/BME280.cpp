@@ -30,8 +30,9 @@ const BME280::bme280_calib_data &BME280::calib_data() const {
 bool BME280::read_calib_data() {
     uint8_t data[26] = {0};
     uint8_t reg_address = 0x88;
+    uint8_t reg_address2 = 0xE1;
 
-    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &reg_address, 1, data, sizeof(data), -1);
+    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &reg_address, 1, data, 26, -1);
     if (err != ESP_OK) {
         gpio_set_level(GPIO_NUM_15, 1);
         return false;
@@ -41,7 +42,32 @@ bool BME280::read_calib_data() {
     this->_calib_data.dig_T1 = data[0] | (data[1] << 8);
     this->_calib_data.dig_T2 = static_cast<int16_t>(data[2] | (data[3] << 8));
     this->_calib_data.dig_T3 = static_cast<int16_t>(data[4] | (data[5] << 8));
-    //TODO: Set up rest of calibration data
 
+    this->_calib_data.dig_P1 = data[6] | (data[7] << 8);
+    this->_calib_data.dig_P2 = static_cast<int16_t>(data[8] | (data[9] << 8));
+    this->_calib_data.dig_P3 = static_cast<int16_t>(data[10] | (data[11] << 8));
+    this->_calib_data.dig_P4 = static_cast<int16_t>(data[12] | (data[13] << 8));
+    this->_calib_data.dig_P5 = static_cast<int16_t>(data[14] | (data[15] << 8));
+    this->_calib_data.dig_P6 = static_cast<int16_t>(data[16] | (data[17] << 8));
+    this->_calib_data.dig_P7 = static_cast<int16_t>(data[18] | (data[19] << 8));
+    this->_calib_data.dig_P8 = static_cast<int16_t>(data[20] | (data[21] << 8));
+    this->_calib_data.dig_P9 = static_cast<int16_t>(data[22] | (data[23] << 8));
+
+    this->_calib_data.dig_H1 = data[25];
+
+    err = i2c_master_transmit_receive(this->_dev_handle, &reg_address2, 1, data, 7, -1);
+    if (err != ESP_OK) {
+        gpio_set_level(GPIO_NUM_15, 1);
+        return false;
+    }
+
+    this->_calib_data.dig_H2 = static_cast<int16_t>(data[0] | (data[1] << 8));
+    this->_calib_data.dig_H3 = data[2];
+    this->_calib_data.dig_H4 = static_cast<int16_t>((data[3] << 4) | ((data[4] & 0xF)));
+    if (this->_calib_data.dig_H4 & 0x800) this->_calib_data.dig_H4 |= static_cast<int16_t>(0xF000);
+
+    this->_calib_data.dig_H5 = static_cast<int16_t>((data[4] >> 4) | (data[5] << 4));
+    if (this->_calib_data.dig_H5 & 0x800) this->_calib_data.dig_H5 |= static_cast<int16_t>(0xF000);
+    this->_calib_data.dig_H6 = static_cast<int8_t>(data[6]);
     return true;
 }
