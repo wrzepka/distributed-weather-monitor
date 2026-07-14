@@ -104,4 +104,32 @@ int32_t BME280::compensate_temperature(int32_t adc_temp) {
     return temp;
 }
 
+bool BME280::read_weather_data() {
+    uint8_t reg_address = 0xF7;
+    uint8_t data[8] = {0};
 
+    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &reg_address, 1, data, 8, -1);
+    if (err != ESP_OK) {
+        gpio_set_level(GPIO_NUM_15, 1);
+        return false;
+    }
+
+    int32_t adc_T, adc_P, adc_H;
+
+    // adc_P = (data[0] << 12) | (data[1] << 4) | ((data[2] >> 4));
+
+    //TODO: Pressure compensation
+
+    adc_T = (data[3] << 12) | (data[4] << 4) | ((data[5] >> 4));
+
+    int32_t T = compensate_temperature(adc_T);
+
+    //TEMPORARY SOLUTION
+    ESP_LOGI("BME280", "Temperature: %d", T);
+
+    // adc_H = (data[6] << 8) | (data[7]);
+
+    //TODO: Humidity compensation
+
+    return true;
+}

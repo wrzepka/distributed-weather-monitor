@@ -43,6 +43,7 @@ public:
     const bme280_calib_data& calib_data() const;
     void print_calib_data() const;
     int32_t compensate_temperature(int32_t adc_temp);
+    bool read_weather_data();
 private:
     uint8_t _address;
     i2c_master_dev_handle_t _dev_handle;

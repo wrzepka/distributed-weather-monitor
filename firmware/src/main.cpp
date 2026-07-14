@@ -40,14 +40,15 @@ extern "C" void app_main(void) {
         i2c_scanner(i2c_bus_handle);
 
         led_state = !led_state;
-        gpio_set_level(BLINK_GPIO, led_state);
+        // gpio_set_level(BLINK_GPIO, led_state);
 
         uint32_t result = light_intensity_sensor->read_light_intensity();
 
         ESP_LOGI(TAG, "LED: %s", (led_state == 1 ? "ON" : "OFF"));
         ESP_LOGI(TAG, "ILLUMINANCE: %u", result);
 
-        temperature_sensor->print_calib_data();
+        temperature_sensor->read_weather_data();
+        // temperature_sensor->print_calib_data();
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
