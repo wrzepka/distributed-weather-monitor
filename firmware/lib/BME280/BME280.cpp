@@ -71,3 +71,26 @@ bool BME280::read_calib_data() {
     this->_calib_data.dig_H6 = static_cast<int8_t>(data[6]);
     return true;
 }
+
+void BME280::print_calib_data() const {
+    const char * TAG = "BME280";
+    ESP_LOGI(TAG, "T1 CALIB DATA: %u", this->_calib_data.dig_T1);
+    ESP_LOGI(TAG, "T2 CALIB DATA: %d", this->_calib_data.dig_T2);
+    ESP_LOGI(TAG, "T3 CALIB DATA: %d", this->_calib_data.dig_T3);
+    ESP_LOGI(TAG, "P1 CALIB DATA: %d", this->_calib_data.dig_P1);
+    ESP_LOGI(TAG, "P2 CALIB DATA: %d", this->_calib_data.dig_P2);
+    ESP_LOGI(TAG, "P3 CALIB DATA: %d", this->_calib_data.dig_P3);
+    ESP_LOGI(TAG, "P4 CALIB DATA: %d", this->_calib_data.dig_P4);
+    ESP_LOGI(TAG, "P5 CALIB DATA: %d", this->_calib_data.dig_P5);
+    ESP_LOGI(TAG, "P6 CALIB DATA: %d", this->_calib_data.dig_P6);
+    ESP_LOGI(TAG, "P7 CALIB DATA: %d", this->_calib_data.dig_P7);
+    ESP_LOGI(TAG, "P8 CALIB DATA: %d", this->_calib_data.dig_P8);
+    ESP_LOGI(TAG, "P9 CALIB DATA: %d", this->_calib_data.dig_P9);
+    ESP_LOGI(TAG, "H1 CALIB DATA: %d", this->_calib_data.dig_H1);
+    ESP_LOGI(TAG, "H2 CALIB DATA: %d", this->_calib_data.dig_H2);
+    ESP_LOGI(TAG, "H3 CALIB DATA: %d", this->_calib_data.dig_H3);
+    ESP_LOGI(TAG, "H4 CALIB DATA: %d", this->_calib_data.dig_H4);
+    ESP_LOGI(TAG, "H5 CALIB DATA: %d", this->_calib_data.dig_H5);
+    ESP_LOGI(TAG, "H6 CALIB DATA: %d", this->_calib_data.dig_H6);
+}
+
