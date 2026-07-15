@@ -1,14 +1,32 @@
-//
-// Created by Wiktor on 13.07.2026.
-//
+/**
+ * @file BME280.h
+ * @author Wiktor
+ * @brief Driver library for BME280 sensor using ESP-IDF I2C master driver.
+ * @date 2026-07-13
+ * @note Compensation algorithms and calibration data structures are based on the
+ *       official Bosch Sensortec BME280 datasheet and their open-source driver.
+ *
+ * @see https://github.com/boschsensortec/BME280_driver
+ */
 
 #ifndef FIRMWARE_BME280_H
 #define FIRMWARE_BME280_H
 #include <driver/i2c_types.h>
 
+/**
+ * @class BME280
+ * @brief Class for interaction with BME280 temperature, pressure and humidity sensor.
+ *
+ * This class provides for now basic control over BME280 sensor using ESP_IDF I2C driver.
+ * It handles sensor initialization and configuration, calibration data readout and methods for raw ADC values
+ * compensation.
+ *
+ */
 class BME280 {
-
 public:
+    /**
+     * @brief Contains BME280 calibration data for temperature, pressure and humidity.
+     */
     struct bme280_calib_data {
         uint16_t dig_T1; /**<calibration T1 data*/
         int16_t dig_T2; /**<calibration T2 data*/
@@ -37,38 +55,102 @@ public:
     //TODO: find alternative (hex i guess)
     union bme_280_ctrl_meas {
         struct {
-            uint8_t mode : 2;
-            uint8_t osrs_p : 3;
-            uint8_t osrs_t : 3;
+            uint8_t mode: 2;
+            uint8_t osrs_p: 3;
+            uint8_t osrs_t: 3;
         } fields;
+
         uint8_t raw;
     };
 
     union bme_280_hum_meas {
         struct {
-            uint8_t osrs_h : 3;
-            uint8_t RESERVED : 5;
+            uint8_t osrs_h: 3;
+            uint8_t RESERVED: 5;
         } fields;
+
         uint8_t raw;
     };
 
     BME280(uint8_t address = 0x76) : _address(address), _dev_handle(nullptr), _calib_data() {
     };
 
+    /**
+     * @brief Initializes I2C connection for BME280 sensor.
+     *
+     * Configures device handler, add it to I2C bus. Next set up ctrl_hum and ctrl_meas registers with sleep mode and x1
+     * oversampling.
+     *
+     * @param bus_handle I2C master bus handle.
+     * @return false when initialization failed, otherwise true.
+     */
     bool begin(i2c_master_bus_handle_t bus_handle);
+
+    /**
+     * @brief Reads calibration data from BME280 registers.
+     *
+     * Reads data from specified registers, then puts it inside bme280_calib_data structure (_calib_data field).
+     *
+     * @return false when read failed, otherwise true.
+     */
     bool read_calib_data();
 
-    const bme280_calib_data& calib_data() const;
+    /**
+     * @brief Gives access to private _calib_data field.
+     * @return static reference to _calib_data field.
+     */
+    const bme280_calib_data &calib_data() const;
+
+    /**
+     * @brief
+     */
     void print_calib_data() const;
+
+    /**
+     * @brief Compensates ADC temperature value and returns it in integer format.
+     *
+     * Calculates compensated value based on 32bit formula from datasheet.
+     *
+     * @param adc_temp ADC temperature value read from sensor registers.
+     * @return Compensated value in integer format (ex. 2560 - 25,60*C)
+     */
     int32_t compensate_temperature(int32_t adc_temp);
+
+    /**
+     * @brief Compensates ADC pressure value and returns it in integer format.
+     *
+     * Calculates compensated value based on 32bit formula from datasheet.
+     *
+     * @param adc_press ADC pressure value read from sensor registers.
+     * @return Compensated value in unsigned integer format (ex. 96368 - 963.68hPa)
+     */
     uint32_t compensate_pressure(int32_t adc_press);
+
+    /**
+     * @brief Compensates ADC humidity value and returns it in integer format.
+     *
+     * Calculates compensated value based on 32bit formula from datasheet.
+     *
+     * @param adc_H ADC humidity value read from sensor registers.
+     * @return Compensated value in unsigned integer format (ex. 47445 - 46.333 %RH (after dividing by 1024!))
+     */
     uint32_t compensate_humidity(int32_t adc_H);
+
+    /**
+     * @brief Reads ADC values for temperature, pressure and humidity. Compensate them and temporarily LOGs them.
+     *
+     * Firstly enables BME280 sensor to Force Mode and waits ~10ms to write up conf. Next reads ADC values and
+     * compensates them. At the end LOGs them using ESP_LOGI function.
+     *
+     * @return false when read failed, otherwise true.
+     */
     bool read_weather_data();
+
 private:
-    uint8_t _address;
-    i2c_master_dev_handle_t _dev_handle;
-    bme280_calib_data _calib_data;
-    int32_t fine_temp;
+    uint8_t _address; /**< Device I2C address (default: 0x76 or 0x77 if specified pin is high) */
+    i2c_master_dev_handle_t _dev_handle; /**< I2C device handle */
+    bme280_calib_data _calib_data; /**< Structure for calibration data*/
+    int32_t fine_temp; /**< Value from compensate_temperature() used in other compensational methods*/
 };
 
 #endif //FIRMWARE_BME280_H
