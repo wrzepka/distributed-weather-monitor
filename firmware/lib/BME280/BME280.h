@@ -4,7 +4,7 @@
  * @brief Driver library for BME280 sensor using ESP-IDF I2C master driver.
  * @date 2026-07-13
  *
- * @note Compensation algorithms are adapted from the official Bosch Sensortec
+ * @note Compensation algorithms and data structures are adapted from the official Bosch Sensortec
  *       BME280 reference implementation (BSD-3-Clause). See
  *       /firmware/THIRD_PARTY_LICENSES/BME280_BSD3.txt for full license text.
  *
