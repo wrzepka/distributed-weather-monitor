@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "WiFiManager.h"
 #include "driver/i2c_master.h"
 #include "../lib/BH1750/BH1750.h"
 #include "../lib/BME280/BME280.h"
@@ -28,8 +29,11 @@ extern "C" void app_main(void) {
 
     BH1750 *light_intensity_sensor = new BH1750();
     BME280 *temperature_sensor = new BME280();
+    WiFiManager *wifi_manager = new WiFiManager();
 
     uint8_t led_state = 0;
+
+    wifi_manager->init_wifi_station();
 
     light_intensity_sensor->begin(i2c_bus_handle);
     temperature_sensor->begin(i2c_bus_handle);
