@@ -26,6 +26,9 @@
  */
 class BME280 {
 public:
+    static constexpr uint8_t DEFAULT_I2C_ADDR = 0x76;
+    static constexpr uint8_t SECONDARY_I2C_ADDR = 0x77;
+
     /**
      * @brief Contains BME280 calibration data for temperature, pressure and humidity.
      */
@@ -74,7 +77,7 @@ public:
         uint8_t raw;
     };
 
-    BME280(uint8_t address = 0x76) : _address(address), _dev_handle(nullptr), _calib_data() {
+    BME280(uint8_t address = DEFAULT_I2C_ADDR) : _address(address), _dev_handle(nullptr), _calib_data() {
     };
 
     /**
@@ -153,6 +156,16 @@ private:
     i2c_master_dev_handle_t _dev_handle; /**< I2C device handle */
     bme280_calib_data _calib_data; /**< Structure for calibration data*/
     int32_t fine_temp; /**< Value from compensate_temperature() used in other compensational methods*/
+    static constexpr uint8_t REG_CALIB_00_ADDR = 0x88;
+    static constexpr uint8_t REG_CALIB_26_ADDR = 0xE1;
+    static constexpr uint8_t REG_CONTROL_HUM_ADDR = 0xF2;
+    static constexpr uint8_t REG_CONTROL_MEAS_ADDR = 0xF4;
+    static constexpr uint8_t REG_MEAS_DATA_START_ADDR = 0xF7;
+    static constexpr uint8_t CALIB_00_PAYLOAD_SIZE = 26;
+    static constexpr uint8_t CALIB_26_PAYLOAD_SIZE = 7;
+    static constexpr uint8_t MEAS_DATA_PAYLOAD_SIZE = 8;
+    static constexpr uint32_t MAX_RESPONSE_TIME_IN_MS = 100;
+    static constexpr uint32_t SUITABLE_MEASUREMENT_DELAY_IN_MS = 100;
 };
 
 #endif //FIRMWARE_BME280_H

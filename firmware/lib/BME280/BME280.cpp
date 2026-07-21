@@ -32,11 +32,13 @@ bool BME280::begin(i2c_master_bus_handle_t bus_handle) {
             }
         };
 
-        uint8_t transmit_data[2] = {0xF2, hum_meas.raw};
-        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
-        transmit_data[0] = 0xF4;
+        uint8_t transmit_data[2] = {REG_CONTROL_HUM_ADDR, hum_meas.raw};
+        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data),
+                            pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
+        transmit_data[0] = REG_CONTROL_MEAS_ADDR;
         transmit_data[1] = ctrl_meas.raw;
-        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
+        i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data),
+                            pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
 
         return true;
     }
@@ -48,11 +50,10 @@ const BME280::bme280_calib_data &BME280::calib_data() const {
 }
 
 bool BME280::read_calib_data() {
-    uint8_t data[26] = {0};
-    uint8_t reg_address = 0x88;
-    uint8_t reg_address2 = 0xE1;
+    uint8_t data[CALIB_00_PAYLOAD_SIZE] = {0};
 
-    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &reg_address, 1, data, 26, -1);
+    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &REG_CALIB_00_ADDR, sizeof(REG_CALIB_00_ADDR), data,
+                                                CALIB_00_PAYLOAD_SIZE, pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
     if (err != ESP_OK) {
         gpio_set_level(GPIO_NUM_15, 1);
         return false;
@@ -75,7 +76,8 @@ bool BME280::read_calib_data() {
 
     this->_calib_data.dig_H1 = data[25];
 
-    err = i2c_master_transmit_receive(this->_dev_handle, &reg_address2, 1, data, 7, -1);
+    err = i2c_master_transmit_receive(this->_dev_handle, &REG_CALIB_26_ADDR, sizeof(REG_CALIB_26_ADDR), data,
+                                      CALIB_26_PAYLOAD_SIZE, pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
     if (err != ESP_OK) {
         gpio_set_level(GPIO_NUM_15, 1);
         return false;
@@ -93,7 +95,7 @@ bool BME280::read_calib_data() {
 }
 
 void BME280::print_calib_data() const {
-    const char * TAG = "BME280";
+    const char *TAG = "BME280";
     ESP_LOGI(TAG, "T1 CALIB DATA: %u", this->_calib_data.dig_T1);
     ESP_LOGI(TAG, "T2 CALIB DATA: %d", this->_calib_data.dig_T2);
     ESP_LOGI(TAG, "T3 CALIB DATA: %d", this->_calib_data.dig_T3);
@@ -117,7 +119,8 @@ void BME280::print_calib_data() const {
 int32_t BME280::compensate_temperature(int32_t adc_temp) {
     int32_t var1, var2, temp;
     var1 = (((adc_temp >> 3) - (this->_calib_data.dig_T1 << 1)) * this->_calib_data.dig_T2) >> 11;
-    var2 = ((((adc_temp >> 4) - (this->_calib_data.dig_T1)) * ((adc_temp >> 4) - this->_calib_data.dig_T1)) >> 12) * this->_calib_data.dig_T3 >> 14;
+    var2 = ((((adc_temp >> 4) - (this->_calib_data.dig_T1)) * ((adc_temp >> 4) - this->_calib_data.dig_T1)) >> 12) *
+           this->_calib_data.dig_T3 >> 14;
 
     this->fine_temp = var1 + var2;
     temp = (this->fine_temp * 5 + 128) >> 8;
@@ -129,24 +132,26 @@ uint32_t BME280::compensate_pressure(int32_t adc_p) {
     uint32_t press;
 
     var1 = (this->fine_temp >> 1) - 64000;
-    var2 = ((var1 >> 2) * (var1>>2) >> 11) * this->_calib_data.dig_P6;
-    var2 = var2 + ((var1 * this->_calib_data.dig_P5)<<1);
+    var2 = ((var1 >> 2) * (var1 >> 2) >> 11) * this->_calib_data.dig_P6;
+    var2 = var2 + ((var1 * this->_calib_data.dig_P5) << 1);
     var2 = (var2 >> 2) + (static_cast<int32_t>(this->_calib_data.dig_P4) << 16);
-    var1 = (((this->_calib_data.dig_P3 * (((var1 >> 2) * (var1 >> 2)) >> 13)) >> 3) + ((static_cast<int32_t>(this->_calib_data.dig_P2) * var1) >> 1)) >> 18;
+    var1 = (((this->_calib_data.dig_P3 * (((var1 >> 2) * (var1 >> 2)) >> 13)) >> 3) + (
+                (static_cast<int32_t>(this->_calib_data.dig_P2) * var1) >> 1)) >> 18;
     var1 = ((32768 + var1) * this->_calib_data.dig_P1) >> 15;
 
     if (var1 == 0) {
         return 0;
     }
-    press = ((1048576 - adc_p) - (var2>>12))*3125;
+    press = ((1048576 - adc_p) - (var2 >> 12)) * 3125;
     if (press < 0x80000000) {
         press = (press << 1) / var1;
     } else {
         press = (press / var1) * 2;
     }
 
-    var1 = ((static_cast<int32_t>(this->_calib_data.dig_P9) * (static_cast<int32_t>((press>>3) * (press>>3)) >> 13))) >> 12;
-    var2 = (static_cast<int32_t>(press>>2) * static_cast<int32_t>(this->_calib_data.dig_P8)) >> 13;
+    var1 = ((static_cast<int32_t>(this->_calib_data.dig_P9) * (
+                 static_cast<int32_t>((press >> 3) * (press >> 3)) >> 13))) >> 12;
+    var2 = (static_cast<int32_t>(press >> 2) * static_cast<int32_t>(this->_calib_data.dig_P8)) >> 13;
 
     press = static_cast<uint32_t>(static_cast<int32_t>(press) + ((var1 + var2 + this->_calib_data.dig_P7) >> 4));
     return press;
@@ -158,11 +163,11 @@ uint32_t BME280::compensate_humidity(int32_t adc_H) {
     v_x1 = (this->fine_temp - static_cast<int32_t>(76800));
 
     v_x1 = (((((adc_H << 14) - (static_cast<int32_t>(this->_calib_data.dig_H4) << 20) -
-        (static_cast<int32_t>(this->_calib_data.dig_H5) * v_x1)) + static_cast<int32_t>(16384)) >> 15) *
+               (static_cast<int32_t>(this->_calib_data.dig_H5) * v_x1)) + static_cast<int32_t>(16384)) >> 15) *
             (((((((v_x1 * static_cast<int32_t>(this->_calib_data.dig_H6)) >> 10) *
-                (((v_x1 * static_cast<int32_t>(this->_calib_data.dig_H3)) >> 11) +
-                    static_cast<int32_t>(32768))) >> 10) + static_cast<int32_t>(2097152)) *
-                    static_cast<int32_t>(this->_calib_data.dig_H2) + 8192) >> 14));
+                 (((v_x1 * static_cast<int32_t>(this->_calib_data.dig_H3)) >> 11) +
+                  static_cast<int32_t>(32768))) >> 10) + static_cast<int32_t>(2097152)) *
+              static_cast<int32_t>(this->_calib_data.dig_H2) + 8192) >> 14));
 
 
     v_x1 = (v_x1 - (((((v_x1 >> 15) * (v_x1 >> 15)) >> 7) * (static_cast<int32_t>(this->_calib_data.dig_H1))) >> 4));
@@ -174,15 +179,17 @@ uint32_t BME280::compensate_humidity(int32_t adc_H) {
 }
 
 bool BME280::read_weather_data() {
-    uint8_t transmit_data[2] = {0xF4, 0x25};
-    i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data), -1);
+    uint8_t transmit_data[2] = {REG_CONTROL_MEAS_ADDR, 0x25};
+    i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data),
+                        pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
 
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(SUITABLE_MEASUREMENT_DELAY_IN_MS));
 
-    uint8_t reg_address = 0xF7;
     uint8_t data[8] = {0};
 
-    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &reg_address, 1, data, 8, -1);
+    esp_err_t err = i2c_master_transmit_receive(this->_dev_handle, &REG_MEAS_DATA_START_ADDR,
+                                                sizeof(REG_MEAS_DATA_START_ADDR), data, MEAS_DATA_PAYLOAD_SIZE,
+                                                pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
     if (err != ESP_OK) {
         gpio_set_level(GPIO_NUM_15, 1);
         return false;
