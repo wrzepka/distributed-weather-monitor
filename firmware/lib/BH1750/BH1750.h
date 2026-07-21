@@ -27,9 +27,9 @@ private:
     uint8_t m_address; /**< I2C device address*/
     i2c_master_dev_handle_t m_dev_handle; /**< I2C device handle*/
     static constexpr uint8_t ONE_TIME_H_RESOLUTION_MODE = 0x20; /**< Value for high resolution one time measurement*/
-    static constexpr float MEASURE_RATIO = 1.2; /** Ratio that is used for calculating proper illuminance. Value is from docs.*/
-    static constexpr uint8_t SUITABLE_MEASUREMENT_DELAY_IN_MS = 180; /**< Appropriate delay for proper measurement. */
-    static constexpr uint8_t MAX_RESPONSE_TIME_IN_MS = 100; /** Maximum waiting time for response in ms.*/
+    static constexpr float MEASURE_RATIO = 1.2f; /** Ratio that is used for calculating proper illuminance. Value is from docs.*/
+    static constexpr uint32_t SUITABLE_MEASUREMENT_DELAY_IN_MS = 180; /**< Appropriate delay for proper measurement. */
+    static constexpr uint32_t MAX_RESPONSE_TIME_IN_MS = 100; /** Maximum waiting time for response in ms.*/
 public:
     BH1750(const uint8_t address = DEFAULT_I2C_ADDRESS) : m_address(address), m_dev_handle(nullptr) {
     }
