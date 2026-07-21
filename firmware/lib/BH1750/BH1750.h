@@ -20,13 +20,18 @@
  * It handles initialization and readout of illuminance.
  */
 class BH1750 {
+public:
+    static constexpr uint8_t DEFAULT_I2C_ADDRESS = 0x20; /**< Default I2C address for BH1750 sensor.*/
+    static constexpr uint8_t SECONDARY_I2C_ADDRESS = 0x5c; /**< Secondary I2C address for BH1750 sensor if ADDR is HIGH.*/
 private:
-    uint8_t _address; /**< I2C device address (default: 0x23, 0x5C if ADDR pin is high)*/
+    uint8_t _address; /**< I2C device address*/
     i2c_master_dev_handle_t _dev_handle; /**< I2C device handle*/
     static constexpr uint8_t ONE_TIME_H_RESOLUTION_MODE = 0x20; /**< Value for high resolution one time measurement*/
-
+    static constexpr float MEASURE_RATIO = 1.2; /** Ratio that is used for calculating proper illuminance. Value is from docs.*/;
+    static constexpr uint8_t SUITABLE_MEASUREMENT_DELAY_IN_MS = 180 /**< Appropriate delay for proper measurement. */;;
+    static constexpr uint8_t MAX_RESPONSE_TIME_IN_MS = 100 /** Maximum waiting time for response in ms.*/;;
 public:
-    BH1750(const uint8_t address = 0x23) : _address(address), _dev_handle(nullptr) {
+    BH1750(const uint8_t address = DEFAULT_I2C_ADDRESS) : _address(address), _dev_handle(nullptr) {
     }
 
     /**
@@ -47,7 +52,7 @@ public:
      *
      * @return Unsigned integer illuminance value in lux (lx).
      */
-    uint32_t read_light_intensity() const;
+    uint32_t read_light_intensity();
 };
 
 #endif //FIRMWARE_BH1750_H

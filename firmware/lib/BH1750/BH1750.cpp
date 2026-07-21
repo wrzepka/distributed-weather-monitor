@@ -19,17 +19,16 @@ bool BH1750::begin(i2c_master_bus_handle_t bus_handle) {
     return i2c_master_bus_add_device(bus_handle, &dev_config, &this->_dev_handle) == ESP_OK;
 }
 
-uint32_t BH1750::read_light_intensity() const {
-    i2c_master_transmit(this->_dev_handle, &ONE_TIME_H_RESOLUTION_MODE, sizeof(uint8_t), -1);
+uint32_t BH1750::read_light_intensity() {
+    i2c_master_transmit(this->_dev_handle, &ONE_TIME_H_RESOLUTION_MODE, sizeof(uint8_t), pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
 
-    vTaskDelay(pdMS_TO_TICKS(180));
-
+    vTaskDelay(pdMS_TO_TICKS(SUITABLE_MEASUREMENT_DELAY_IN_MS));
     uint8_t buffer[2] = {0};
 
-    i2c_master_receive(this->_dev_handle, buffer, sizeof(buffer), pdMS_TO_TICKS(1000));
+    i2c_master_receive(this->_dev_handle, buffer, sizeof(buffer), pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
 
-    float light_intensity = (static_cast<uint16_t>(buffer[0]) << 8) | buffer[1];
-    light_intensity = light_intensity / 1.2;
+    auto light_intensity = static_cast<float>((static_cast<uint16_t>(buffer[0]) << 8) | buffer[1]);
+    light_intensity = light_intensity / MEASURE_RATIO;
 
     return static_cast<uint32_t>(light_intensity);
 }
