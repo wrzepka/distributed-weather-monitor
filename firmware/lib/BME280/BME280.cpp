@@ -10,7 +10,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-esp_err_t BME280::begin(i2c_master_bus_handle_t bus_handle) {
+esp_err_t BME280::begin(i2c_master_bus_handle_t bus_handle, const Config &config) {
     if (bus_handle == nullptr) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -28,29 +28,36 @@ esp_err_t BME280::begin(i2c_master_bus_handle_t bus_handle) {
         return result;
     }
 
-    bme_280_hum_meas hum_meas = {
-        .fields = {.osrs_h = 1, .RESERVED = 0}
-    };
-
-    bme_280_ctrl_meas ctrl_meas = {
-        .fields = {
-            .mode = 0,
-            .osrs_p = 1,
-            .osrs_t = 1,
-        }
-    };
-
-    uint8_t transmit_data[2] = {REG_CONTROL_HUM_ADDR, hum_meas.raw};
-    result = i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data),
-                                 pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
+    result = apply_config(config);
     if (result != ESP_OK) {
         return result;
     }
 
-    transmit_data[0] = REG_CONTROL_MEAS_ADDR;
-    transmit_data[1] = ctrl_meas.raw;
-    result = i2c_master_transmit(this->_dev_handle, transmit_data, sizeof(transmit_data),
-                                 pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
+    result = read_calib_data();
+    if (result != ESP_OK) {
+        return result;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t BME280::apply_config(const Config &config) {
+    uint8_t hum_os_value = static_cast<uint8_t>(config.hum_oversampling) & 0x07;
+    uint8_t hum_data[2] = {REG_CONTROL_HUM_ADDR, hum_os_value};
+
+    esp_err_t result = i2c_master_transmit(this->_dev_handle, hum_data, sizeof(hum_data),
+                             pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
+    if (result != ESP_OK) {
+        return result;
+    }
+
+    uint8_t meas_value = (static_cast<uint8_t>(config.mode) & 0x03) | (
+                             static_cast<uint8_t>(config.press_oversampling) << 2) | (
+                             static_cast<uint8_t>(config.temp_oversampling) << 5);
+
+    uint8_t meas_data[2] = {REG_CONTROL_HUM_ADDR, meas_value};
+    result = i2c_master_transmit(this->_dev_handle, meas_data, sizeof(meas_data),
+                         pdMS_TO_TICKS(MAX_RESPONSE_TIME_IN_MS));
     if (result != ESP_OK) {
         return result;
     }

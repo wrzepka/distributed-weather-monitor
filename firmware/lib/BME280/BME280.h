@@ -58,24 +58,26 @@ public:
         int32_t t_fine; /**<calibration T_FINE data*/
     };
 
-    //TODO: find alternative (hex i guess)
-    union bme_280_ctrl_meas {
-        struct {
-            uint8_t mode: 2;
-            uint8_t osrs_p: 3;
-            uint8_t osrs_t: 3;
-        } fields;
-
-        uint8_t raw;
+    enum class Oversampling : uint8_t {
+        Skipped = 0x00,
+        X1 = 0x01,
+        X2 = 0x02,
+        X4 = 0x03,
+        X8 = 0x04,
+        X16 = 0x05,
     };
 
-    union bme_280_hum_meas {
-        struct {
-            uint8_t osrs_h: 3;
-            uint8_t RESERVED: 5;
-        } fields;
+    enum class Mode : uint8_t {
+        Sleep = 0x00,
+        Forced = 0x01,
+        Normal = 0x03
+    };
 
-        uint8_t raw;
+    struct Config {
+        Oversampling temp_oversampling = Oversampling::X1;
+        Oversampling press_oversampling = Oversampling::X1;
+        Oversampling hum_oversampling = Oversampling::X1;
+        Mode mode = Mode::Sleep;
     };
 
     BME280(uint8_t address = DEFAULT_I2C_ADDR) : _address(address), _dev_handle(nullptr), _calib_data() {
@@ -88,9 +90,13 @@ public:
      * oversampling.
      *
      * @param bus_handle I2C master bus handle.
+     * @param config
      * @return false when initialization failed, otherwise true.
      */
-    esp_err_t begin(i2c_master_bus_handle_t bus_handle);
+    esp_err_t begin(i2c_master_bus_handle_t bus_handle, const Config &config);
+
+    esp_err_t apply_config(const Config &config);
+
 
     /**
      * @brief Reads calibration data from BME280 registers.
