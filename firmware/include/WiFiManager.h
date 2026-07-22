@@ -49,7 +49,7 @@ class WiFiManager {
      * Creates and uses handles for network interface, events and event group. Next setups wi-fi module
      * for work in STATION MODE.
      */
-    void init_wifi_station();
+    esp_err_t init_wifi_station();
 
     /**
      * @brief Configures static ip for station.
@@ -57,7 +57,7 @@ class WiFiManager {
      * Stops _sta_netif DHCP. Next initializes and setup esp_netif_ip_info_t structure and set it up to _sta_netif.
      * This method is created for lowering power usage by the ESP32.
      */
-    void set_static_ip();
+    esp_err_t set_static_ip();
 };
 
 

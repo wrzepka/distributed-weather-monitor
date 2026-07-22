@@ -10,40 +10,44 @@
 #include "nvs_flash.h"
 
 
-void WiFiManager::init_wifi_station() {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+esp_err_t WiFiManager::init_wifi_station() {
+    //TODO: FIX MEMORY LEAK (free event group handler)
+    esp_err_t result = ESP_OK;
+    if ((result = esp_netif_init()) != ESP_OK) return result;
+    if ((result = esp_event_loop_create_default()) != ESP_OK) return result;
     this->_s_network_event_group = xEventGroupCreate();
 
-    esp_err_t result = nvs_flash_init();
+    result = nvs_flash_init();
     if (result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
+        nvs_flash_erase();
         result = nvs_flash_init();
     }
-    ESP_ERROR_CHECK(result);
+    if (result != ESP_OK) return result;
 
     this->_sta_netif = esp_netif_create_default_wifi_sta();
 
     if (this->_sta_netif == nullptr) {
-        ESP_LOGI("WIFI", "Failed to create a WiFi network interface");
+        return ESP_FAIL;
     }
 
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&init_config));
+    if ((result = esp_wifi_init(&init_config)) != ESP_OK) return result;
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+    result = esp_event_handler_instance_register(
         WIFI_EVENT,
         ESP_EVENT_ANY_ID,
         &WiFiManager::wifi_event_handler,
         this,
-        &this->_instance_any_id));
+        &this->_instance_any_id);
+    if (result != ESP_OK) return result;
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+    result = esp_event_handler_instance_register(
         IP_EVENT,
         IP_EVENT_STA_GOT_IP,
         &WiFiManager::wifi_event_handler,
         this,
-        &this->_instance_got_ip));
+        &this->_instance_got_ip);
+    if (result != ESP_OK) return result;
 
     wifi_config_t wifi_config = {};
     strlcpy(reinterpret_cast<char *>(wifi_config.sta.ssid), "PocoF5", sizeof(wifi_config.sta.ssid));
@@ -51,9 +55,9 @@ void WiFiManager::init_wifi_station() {
     wifi_config.sta.scan_method = WIFI_FAST_SCAN;
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
+    if ((result = esp_wifi_set_mode(WIFI_MODE_STA)) != ESP_OK) return result;
+    if ((result = esp_wifi_set_config(WIFI_IF_STA, &wifi_config)) != ESP_OK) return result;
+    if ((result = esp_wifi_start()) != ESP_OK) return result;
 
     EventBits_t bits = xEventGroupWaitBits(
         this->_s_network_event_group,
@@ -62,18 +66,13 @@ void WiFiManager::init_wifi_station() {
         pdFALSE,
         pdMS_TO_TICKS(5000));
 
-    static const char *TAG = "WIFI";
+    if ((result = esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, this->_instance_got_ip)) != ESP_OK) return result;
+    if ((result = esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, this->_instance_any_id)) != ESP_OK) return result;
 
     if (bits & BIT0) {
-        ESP_LOGI(TAG, "connected to AP");
-    } else if (bits & BIT1) {
-        ESP_LOGI(TAG, "Failed to connect!");
-    } else {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        return ESP_OK;
     }
-
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, this->_instance_got_ip));
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, this->_instance_any_id));
+    return ESP_ERR_TIMEOUT;
 }
 
 void WiFiManager::wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -104,22 +103,26 @@ void WiFiManager::wifi_event_handler(void *arg, esp_event_base_t event_base, int
     }
 }
 
-void WiFiManager::set_static_ip() {
-    if (esp_netif_dhcpc_stop(this->_sta_netif) != ESP_OK) {
-        ESP_LOGE("WIFI", "Failed to stop DHCP server");
-        return;
+esp_err_t WiFiManager::set_static_ip() {
+    esp_err_t result = esp_netif_dhcpc_stop(this->_sta_netif);
+    if (result != ESP_OK) {
+        return result;
     }
 
     esp_netif_ip_info_t ip_info = {};
-    esp_netif_str_to_ip4("10.246.161.67", &ip_info.ip);
-    esp_netif_str_to_ip4("255.255.255.0", &ip_info.netmask);
-    esp_netif_str_to_ip4("10.246.161.1", &ip_info.gw);
-
-    if (esp_netif_set_ip_info(this->_sta_netif, &ip_info) != ESP_OK) {
-        ESP_LOGE("WIFI", "Failed to set ip info");
-        return;
+    esp_err_t address_err = ESP_OK;
+    address_err |= esp_netif_str_to_ip4("10.246.161.67", &ip_info.ip);
+    address_err |= esp_netif_str_to_ip4("255.255.255.0", &ip_info.netmask);
+    address_err |= esp_netif_str_to_ip4("10.246.161.1", &ip_info.gw);
+    if (address_err != ESP_OK) {
+        return ESP_ERR_INVALID_ARG;
     }
 
-    ESP_LOGI("WIFI", "Successfully set up static ip.");
+    result = esp_netif_set_ip_info(this->_sta_netif, &ip_info);
+    if (result != ESP_OK) {
+        return result;
+    }
+
+    return ESP_OK;
 }
 
