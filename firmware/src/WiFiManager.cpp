@@ -57,6 +57,7 @@ esp_err_t WiFiManager::init_wifi_station() {
 
     if ((result = esp_wifi_set_mode(WIFI_MODE_STA)) != ESP_OK) return result;
     if ((result = esp_wifi_set_config(WIFI_IF_STA, &wifi_config)) != ESP_OK) return result;
+    if ((result = this->set_static_ip()) != ESP_OK) return result;
     if ((result = esp_wifi_start()) != ESP_OK) return result;
 
     EventBits_t bits = xEventGroupWaitBits(
@@ -66,8 +67,10 @@ esp_err_t WiFiManager::init_wifi_station() {
         pdFALSE,
         pdMS_TO_TICKS(MAX_EVENT_GROUP_WAIT_TIME));
 
-    if ((result = esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, this->_instance_got_ip)) != ESP_OK) return result;
-    if ((result = esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, this->_instance_any_id)) != ESP_OK) return result;
+    if ((result = esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, this->_instance_got_ip)) !=
+        ESP_OK) return result;
+    if ((result = esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, this->_instance_any_id)) !=
+        ESP_OK) return result;
 
     if (bits & WIFI_CONNECTED_BIT) {
         return ESP_OK;
@@ -81,8 +84,6 @@ void WiFiManager::wifi_event_handler(void *arg, esp_event_base_t event_base, int
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) {
-        wifi_manager->set_static_ip();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         // auto* disconnected_data = static_cast<wifi_event_sta_disconnected_t*>(event_data);
         // while (true) {
@@ -125,4 +126,3 @@ esp_err_t WiFiManager::set_static_ip() {
 
     return ESP_OK;
 }
-
